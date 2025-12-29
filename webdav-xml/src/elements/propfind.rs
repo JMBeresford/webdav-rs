@@ -5,7 +5,7 @@
 use bytestring::ByteString;
 
 use crate::{
-    elements::Properties, Element, ExtractElementError, ExtractElementErrorKind, Value,
+    elements::Properties, Element, ExtractElementError, ExtractElementErrorKind, Value, ValueMap,
     DAV_NAMESPACE, DAV_PREFIX,
 };
 
@@ -46,8 +46,31 @@ impl TryFrom<&Value> for Propfind {
     }
 }
 
+impl From<Propfind> for Value {
+    fn from(propfind: Propfind) -> Self {
+        let mut map = ValueMap::new();
+
+        match propfind {
+            Propfind::Propname => map.insert::<Propname>(Propname.into()),
+            Propfind::Allprop { include } => {
+                map.insert::<Allprop>(Allprop.into());
+
+                if let Some(include) = include {
+                    map.insert::<Include>(include.into());
+                }
+            }
+            Propfind::Prop(props) => {
+                let mut map = ValueMap::new();
+                map.insert::<Properties>(props.into());
+            }
+        };
+
+        Value::Map(map)
+    }
+}
+
 /// The `propname` XML element as defined in [RFC 4918](http://webdav.org/specs/rfc4918.html#ELEMENT_propname).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct Propname;
 
 impl Element for Propname {
@@ -64,8 +87,14 @@ impl TryFrom<&Value> for Propname {
     }
 }
 
+impl From<Propname> for Value {
+    fn from(_: Propname) -> Self {
+        Value::Empty
+    }
+}
+
 /// The `allprop` XML element as defined in [RFC 4918](http://webdav.org/specs/rfc4918.html#ELEMENT_allprop).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct Allprop;
 
 impl Element for Allprop {
@@ -79,6 +108,12 @@ impl TryFrom<&Value> for Allprop {
 
     fn try_from(_: &Value) -> Result<Self, Self::Error> {
         Ok(Allprop)
+    }
+}
+
+impl From<Allprop> for Value {
+    fn from(_: Allprop) -> Self {
+        Value::Empty
     }
 }
 
@@ -96,6 +131,12 @@ impl TryFrom<&Value> for Include {
     type Error = ExtractElementError;
 
     fn try_from(_: &Value) -> Result<Self, Self::Error> {
+        todo!()
+    }
+}
+
+impl From<Include> for Value {
+    fn from(_: Include) -> Self {
         todo!()
     }
 }
