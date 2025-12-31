@@ -60,7 +60,6 @@ impl From<Propfind> for Value {
                 }
             }
             Propfind::Prop(props) => {
-                let mut map = ValueMap::new();
                 map.insert::<Properties>(props.into());
             }
         };
@@ -138,5 +137,74 @@ impl TryFrom<&Value> for Include {
 impl From<Include> for Value {
     fn from(_: Include) -> Self {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bytestring::ByteString;
+
+    use crate::{
+        elements::{Properties, Propfind},
+        properties::{CreationDate, ETag, LastModified},
+        FromXml, IntoXml,
+    };
+
+    #[test]
+    fn test_deserialize_propfind_properties() {
+        let xml = r#"
+<?xml version="1.0" encoding="UTF-8"?>
+<d:propfind xmlns:d="DAV:">
+  <d:prop>
+    <d:creationdate/>
+    <d:getlastmodified/>
+    <d:getetag>W/"123456789"</d:getetag>
+  </d:prop>
+</d:propfind>
+"#;
+
+        let propfind = Propfind::from_xml(xml).expect("Failed to deserialize propfind");
+
+        match propfind {
+            Propfind::Prop(props) => {
+                assert!(props.get::<CreationDate>().is_some_and(|v| v.is_none()));
+                assert!(props.get::<LastModified>().is_some_and(|v| v.is_none()));
+
+                assert!(props
+                    .get::<ETag>()
+                    .flatten()
+                    .and_then(|etag| etag.ok())
+                    .is_some_and(|etag| etag.0 == r#"W/"123456789""#));
+            }
+            _ => panic!("Expected Propfind::Prop variant"),
+        }
+    }
+
+    #[test]
+    fn test_serialize_propfind_properties() {
+        let propfind = Propfind::Prop(
+            Properties::new()
+                .with_name::<CreationDate>()
+                .with_name::<LastModified>()
+                .with(ETag(ByteString::from(r#"W/"123456789""#)))
+                .with_name::<ETag>(),
+        );
+
+        let bytes = propfind.into_xml().expect("Failed to serialize propfind");
+        let xml = String::from_utf8(bytes.to_vec()).expect("Invalid UTF-8 in serialized XML");
+
+        let expected_xml = r#"
+<?xml version="1.0" encoding="utf-8"?>
+<d:propfind xmlns:d="DAV:">
+  <d:prop>
+    <d:creationdate/>
+    <d:getlastmodified/>
+    <d:getetag>W/"123456789"</d:getetag>
+    <d:getetag/>
+  </d:prop>
+</d:propfind>
+"#;
+
+        assert_eq!(xml.trim(), expected_xml.trim());
     }
 }
