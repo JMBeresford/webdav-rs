@@ -92,15 +92,17 @@ to constants in the future.
 - [X] `multistatus`
 - [X] `owner`
 - [X] `prop`
-- [ ] `propertyupdate`
+- [X] `propertyupdate`
 - [X] `propfind`
 - [X] `propname`: internally implemented for
   `Propfind`
 - [X] `propstat`
-- [ ] `remove`
+- [X] `remove`: internally implemented for
+  `PropertyUpdate`
 - [X] `response`
 - [X] `responsedescription`
-- [ ] `set`
+- [X] `set`: internally implemented for
+  `PropertyUpdate`
 - [X] `shared`: internally implemented for
   `LockScope`
 - [ ] `status`

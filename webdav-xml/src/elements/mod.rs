@@ -17,6 +17,7 @@ mod locktype;
 mod multistatus;
 mod owner;
 mod prop;
+mod propertyupdate;
 mod propfind;
 mod propstat;
 mod response;
@@ -37,6 +38,7 @@ pub use self::{
     multistatus::Multistatus,
     owner::Owner,
     prop::Properties,
+    propertyupdate::{PropertyUpdate, Remove, Set},
     propfind::{Include, Propfind},
     propstat::Propstat,
     response::Response,
